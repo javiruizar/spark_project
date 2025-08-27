@@ -1,38 +1,25 @@
 package org.javi.master.streaming
 
 
-import org.apache.spark.SparkConf
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{Dataset, Row, SparkSession, functions}
+import org.apache.spark.sql.{Dataset, Row}
 import org.apache.spark.sql.functions.{array_intersect, col, concat, concat_ws, max, lit, size, when}
-import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.{StringType, StructType}
 
+
+import org.javi.master.streaming.config.StreamingConfig
+import org.javi.master.streaming.spark.KafkaSparkSession
+import org.javi.master.streaming.processing.QueryProcessor
 
 object StreamingApp extends Logging {
 
   def main(args: Array[String]): Unit = {
-
-    val sparkConf = new SparkConf()
-      .set("spark.mongodb.read.connection.uri", "mongodb://masternode:27017/elmercado.articulos")
-      .set("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.11:2.3.2")
-      .set("spark.sql.streaming.checkpointLocation", "/tmp")
-      .set("spark.driver.memory", "1g")
-      .set("spark.executor.memory", "1g")
-
-    log.info("starting Spark session")
-    val ssc = SparkSession
-      .builder()
-      .config(sparkConf)
-      .appName("ElMercado-StreamingApplication")
-      .getOrCreate()
+    val cfg   = StreamingConfig.load("conf/streaming.conf")
+    val ssc   = KafkaSparkSession.build(cfg)
 
     import ssc.implicits._
-    val sparkMaster = ssc.conf.get("spark.master")
-    val bootstrapServer = sparkMaster match {
-      case "local[*]" => "localhost:9095"
-      case _ => "workernode1:9092,workernode2:9093,workernode3:9094"
-    }
+
+    val bootstrapServer = if (ssc.conf.get("spark.master") == "local[*]") cfg.kafkaLocalBootstrap else cfg.kafkaClusterBootstrap
 
     val mongoData = ssc.read
       .format("mongodb")
@@ -66,14 +53,7 @@ object StreamingApp extends Logging {
           val busqueda = batchDF.select("BUSQUEDA").collect()(0).mkString.replace("\"", "")
             .toLowerCase.split(" ")
 
-          val output = articlesDataFrame
-            .withColumn("busqueda", lit(busqueda))
-            .withColumn("inters_size", size(array_intersect(col("busqueda"), col("palabras_clave"))))
-            .filter(col("inters_size") > 0)
-            .withColumn("max_value", max("inters_size").over())
-            .filter(col("max_value") === col("inters_size"))
-            .select(
-              col("valores").cast(StringType).as("value"))
+          val output = QueryProcessor.process(articlesDataFrame, busqueda)
 
 
           val dummyData = Seq("No se ha encontrado ningun artículo con esas palabras clave")

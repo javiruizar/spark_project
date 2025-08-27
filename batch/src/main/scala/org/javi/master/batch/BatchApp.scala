@@ -1,42 +1,41 @@
 package org.javi.master.batch
 
-import org.apache.spark.sql.SparkSession
+import com.typesafe.config.ConfigRenderOptions
 import org.apache.spark.internal.Logging
+import org.apache.spark.sql.SparkSession
+import org.javi.master.shared.config.ReadConfig
+import org.javi.master.shared.spark.SparkSessionFactory
+import org.javi.master.shared.utils.io.JsonUtils._
+import org.javi.master.shared.utils.io.MongoWriter
 
-
+/**
+  * Punto de entrada de la aplicación Batch — ahora solo orquesta componentes.
+  */
 object BatchApp extends Logging {
+
   def main(args: Array[String]): Unit = {
+    val config   = ReadConfig.load("/home/scripts/conf/batch.conf")
+    val renderOptions = ConfigRenderOptions.defaults()
+      .setOriginComments(false) // No mostrar comentarios sobre el origen de cada valor
+      .setComments(false)       // No mostrar comentarios del fichero
+      .setJson(true)            // Usar formato JSON
+      .setFormatted(true)
+    println(config.root().render(renderOptions))
+    val spark: SparkSession = SparkSessionFactory.build("ElMercado-BatchApplication", config)
 
     try {
-
-      log.info("Creando SparkSession")
-      val spark = SparkSession
-        .builder()
-        .config("spark.driver.memory", "1g")
-        .config("spark.executor.memory", "1g")
-        .config("spark.mongodb.output.collection", "articulos")
-        .config("spark.mongodb.output.database", "elmercado")
-        .config("spark.mongodb.output.uri", "mongodb://masternode:27017")
-        .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:3.2.0")
-        .appName("ElMercado-BatchApplication")
-        .getOrCreate()
-
-      val inputRelativePath = "data/json/input/"
-      val inputAbsolutePath = "/" + inputRelativePath
-      val sparkMaster = spark.conf.get("spark.master")
-      val inputPath = sparkMaster match {
-        case "local[*]" => inputRelativePath
-        case _ => inputAbsolutePath
-      }
-      val df = spark.read.option("multiline", "true").json(inputPath)
-      df.select("id_articulo", "nombre_articulo", "palabras_clave", "caracteristicas_venta").write
-        .format("com.mongodb.spark.sql.DefaultSource").mode("overwrite").save()
-    }
-    catch {
+      val jsonPath = getFinalPath(spark, config)
+      val inputDf = readJson(spark, jsonPath)
+      // Filtra columnas relevantes
+      val selected = inputDf.select("id_articulo", "nombre_articulo", "palabras_clave", "caracteristicas_venta")
+      MongoWriter.write(selected, config)
+      log.info("Proceso Batch finalizado con éxito")
+    } catch {
       case e: Exception =>
-        log.error(s"Ocurrio una excepcion de tipo ${e.getClass.getSimpleName} durante la ejecucion:")
-        log.error(e.getMessage)
-        throw new Exception(e)
+        log.error("Error durante la ejecucion Batch", e)
+        throw e
+    } finally {
+      spark.stop()
     }
   }
 }
