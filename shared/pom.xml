@@ -23,7 +23,7 @@
         </dependency>
         <dependency>
             <groupId>org.mongodb.spark</groupId>
-            <artifactId>mongo-spark-connector_2.12</artifactId>
+            <artifactId>mongo-spark-connector_${scala.short.version}</artifactId>
         </dependency>
         <!-- Typesafe Config for external conf loading -->
         <dependency>
@@ -40,8 +40,19 @@
         </dependency>
         <dependency>
             <groupId>org.mongodb.scala</groupId>
-            <artifactId>mongo-scala-driver_2.12</artifactId>
+            <artifactId>mongo-scala-driver_${scala.short.version}</artifactId>
         </dependency>
-
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>

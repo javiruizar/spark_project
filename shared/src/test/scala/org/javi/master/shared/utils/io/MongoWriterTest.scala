@@ -20,7 +20,7 @@ class MongoWriterTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   private lazy val mongod: RunningMongodProcess = Mongod.builder()
     .net(Start.to(classOf[Net]).initializedWith(Net.defaults()))
     .build()
-    .start(Version.V5_0_14).current()
+    .start(Version.V6_0_4).asState().value()
 
   private val port: Int = mongod.getServerAddress.getPort
   private val testDb: String = "testdb"
