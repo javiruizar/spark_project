@@ -1,6 +1,7 @@
 package org.javi.master.batch
 
 import com.typesafe.config.ConfigRenderOptions
+import org.apache.spark.SparkFiles
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.javi.master.shared.config.ReadConfig
@@ -14,8 +15,7 @@ import org.javi.master.shared.utils.io.MongoWriter
 object BatchApp extends Logging {
 
   def main(args: Array[String]): Unit = {
-    println("CLASSPATH: " + System.getProperty("java.class.path"))
-    val config   = ReadConfig.load("/home/scripts/conf/batch.conf")
+    val config   = ReadConfig.load("hdfs:///batch.conf")
     val renderOptions = ConfigRenderOptions.defaults()
       .setOriginComments(false) // No mostrar comentarios sobre el origen de cada valor
       .setComments(false)       // No mostrar comentarios del fichero
