@@ -6,6 +6,9 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.shaded.org.jline.utils.InputStreamReader
 import org.apache.spark.internal.Logging
 
+import java.io.File
+import scala.io.Source
+
 object ReadConfig extends Logging {
   def load(confPath: String): Config = {
     try {
@@ -21,14 +24,11 @@ object ReadConfig extends Logging {
           in.close()
         }
       } else {
-        ConfigFactory.parseFile(new java.io.File(confPath))
+        val customConfigFile = new File(confPath)
+        val fileContentAsString = Source.fromFile(customConfigFile).getLines().mkString("\n")
+
+        ConfigFactory.parseString(fileContentAsString)
       }
-      val renderOptions = ConfigRenderOptions.defaults()
-        .setOriginComments(false) // No mostrar comentarios sobre el origen de cada valor
-        .setComments(false)       // No mostrar comentarios del fichero
-        .setJson(true)            // Usar formato JSON
-        .setFormatted(true)
-      println(conf.root().render(renderOptions))
       conf
     } catch {
       case e: Exception =>

@@ -1,6 +1,6 @@
-package org.javi.master.shared.utils.io
+package org.javi.master.shared.utils.mongo
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
 import de.flapdoodle.embed.mongo.config.Net
 import de.flapdoodle.embed.mongo.distribution.Version
 import de.flapdoodle.embed.mongo.transitions.{Mongod, RunningMongodProcess}
@@ -13,7 +13,7 @@ import org.scalatest.matchers.should.Matchers
 
 import scala.collection.JavaConverters._
 
-class MongoWriterTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
+class MongoUtilsTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   // --- Variables para la BD embebida y Spark ---
   // 1. Iniciar MongoDB en un puerto aleatorio
@@ -29,7 +29,7 @@ class MongoWriterTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
 
   private lazy val spark: SparkSession = SparkSession.builder()
     .master("local[*]")
-    .appName("MongoWriterTest")
+    .appName("MongoUtilsTest")
     .config("spark.driver.host", "localhost") // Evita problemas de red en algunos sistemas
     .config("spark.ui.enabled", "false")
     .config("spark.mongodb.output.uri", s"$mongoUri/$testDb.$testCollection")
@@ -49,7 +49,7 @@ class MongoWriterTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     super.afterAll()
   }
 
-  "MongoWriter.write" should "write a DataFrame to MongoDB correctly" in {
+  "MongoUtils.writeMongo" should "writeMongo a DataFrame to MongoDB correctly" in {
 
 //    val testConfig = ReadConfig.load("shared/src/test/resources/conf/batch.conf")
 
@@ -66,7 +66,7 @@ class MongoWriterTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
         |    }
         |""".stripMargin)
 
-    MongoWriter.write(testDf, testConfig)
+    MongoUtils.writeMongo(testDf, testConfig)
 
     val writtenDf = spark.read
       .format("mongodb")
@@ -87,7 +87,7 @@ class MongoWriterTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
     writtenData should contain theSameElementsAs originalData
   }
 
-  "MongoWriter.write" should "Throw an exception when parameters are incorrect" in {
+  "MongoUtils.writeMongo" should "Throw an exception when parameters are incorrect" in {
 
     val testConfigWrongUri = ConfigFactory.parseString(
       f"""
@@ -103,7 +103,7 @@ class MongoWriterTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
          |""".stripMargin)
 
     an[Exception] should be thrownBy {
-      MongoWriter.write(testDf, testConfigWrongUri)
+      MongoUtils.writeMongo(testDf, testConfigWrongUri)
     }
   }
 }

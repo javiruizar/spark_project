@@ -38,7 +38,7 @@
 //    }
 //  }
 //
-//  "StreamingApp" should "process articles and prepare them for Kafka" in {
+//  "StreamingApp" should "getFoundArticlesDf articles and prepare them for Kafka" in {
 //    val spark = this.spark
 //    import spark.implicits._
 //
@@ -100,7 +100,7 @@
 //      .select("nombre_articulo", "palabras_clave", "valores")
 //
 //    // Apply the query processing
-//    QueryProcessor.process(processedDF, searchTerms)
+//    QueryProcessor.getFoundArticlesDf(processedDF, searchTerms)
 //  }
 //
 //  it should "use local Kafka bootstrap server in local mode" in {

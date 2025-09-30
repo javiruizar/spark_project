@@ -14,7 +14,25 @@
         <module>shared</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+
+        <profile>
+            <id>prod</id>
+            <properties>
+                <conf.dir>prod</conf.dir>
+            </properties>
+        </profile>
+    </profiles>
+
+
     <properties>
+        <conf.dir>dev</conf.dir>
         <scala.version>2.12.17</scala.version>
         <scala.short.version>2.12</scala.short.version>
         <spark.version>3.5.1</spark.version>
@@ -122,6 +140,11 @@
                 <version>${log4j2.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>2.15.2</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -188,7 +211,29 @@
                     </excludes>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/conf</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../conf/${conf.dir}</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

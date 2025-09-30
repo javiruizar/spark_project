@@ -1,6 +1,5 @@
-package org.javi.master.shared.utils.io
+package org.javi.master.shared.utils.json
 
-import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 import org.javi.master.shared.config.ReadConfig
 import org.scalatest.BeforeAndAfterAll

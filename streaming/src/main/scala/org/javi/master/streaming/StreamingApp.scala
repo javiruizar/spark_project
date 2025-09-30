@@ -1,50 +1,48 @@
 package org.javi.master.streaming
 
 
+import com.typesafe.config.{Config, ConfigRenderOptions}
+import org.apache.spark.SparkFiles
 import org.apache.spark.internal.Logging
-import org.apache.spark.sql.{Dataset, Row}
-import org.apache.spark.sql.functions.{array_intersect, col, concat, concat_ws, max, lit, size, when}
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.sql.functions.{array_intersect, col, concat, concat_ws, lit, max, size, when}
 import org.apache.spark.sql.types.{StringType, StructType}
+import org.javi.master.shared.config.ReadConfig
+import org.javi.master.shared.spark.SparkSessionFactory
+import org.javi.master.shared.utils.mongo.MongoUtils.readMongo
+import org.javi.master.shared.ops.DataFrameOps._
+import org.javi.master.shared.utils.kafka.KafkaUtils.{readKafkaStream, writeKafkaStream}
 
-
-import org.javi.master.streaming.config.StreamingConfig
-import org.javi.master.streaming.spark.KafkaSparkSession
-import org.javi.master.streaming.processing.QueryProcessor
+import java.io.File
+//import org.javi.master.streaming.processing.QueryProcessor
 
 object StreamingApp extends Logging {
 
   def main(args: Array[String]): Unit = {
-    val cfg   = StreamingConfig.load("conf/streaming.conf")
-    val ssc   = KafkaSparkSession.build(cfg)
+
+    val confPath = System.getProperty("config.file")
+    val cfg: Config = ReadConfig.load(confPath)
+    val ssc: SparkSession = SparkSessionFactory.build(cfg)
 
     import ssc.implicits._
 
-    val bootstrapServer = if (ssc.conf.get("spark.master") == "local[*]") cfg.kafkaLocalBootstrap else cfg.kafkaClusterBootstrap
+    val mongoData = readMongo(ssc, cfg)
 
-    val mongoData = ssc.read
-      .format("mongodb")
-      .load()
+    val sellingFeatures = mongoData.getFieldsOfNestedColumn("caracteristicas_venta")
 
-    val caracteristicas_venta = mongoData.select("caracteristicas_venta").schema.fields.head.dataType.asInstanceOf[StructType].fields
+    val allArticlesDataFrame = mongoData.getAllArticlesWithFeaturesDf(sellingFeatures)
 
-    val keyValueColumns = caracteristicas_venta.map { field =>
-      val colName = field.name
-      val colValue = col(s"caracteristicas_venta.$colName")
-      when(colValue.isNotNull, concat_ws(", ", concat_ws(":", lit(colName),colValue)))
-    }
+    log.info("LEYENDO DE KAFKA")
 
-    val articlesDataFrame = mongoData
-      .withColumn("clave_valor", concat_ws(", ", keyValueColumns: _*))
-      .withColumn("valores", concat(lit("Articulo: "), col("nombre_articulo"), lit("\nCaracteristicas: \n"), col("clave_valor")))
-      .select("nombre_articulo", "palabras_clave", "valores")
-
-    val kafkaDF = ssc.readStream
-      .format("kafka")
-      .option("kafka.bootstrap.servers", bootstrapServer)
-      .option("subscribe", "streaming-query")
-      .option("startingOffsets", "latest")
-      .load()
+    val kafkaDF = readKafkaStream(ssc, cfg)
       .selectExpr("CAST(value AS STRING) as BUSQUEDA")
+
+//    val inputConsole = kafkaDF.writeStream.format("console")
+//      .option("truncate", false)
+//      .outputMode("append")
+//      .start()
+
+    log.info("ESCRIBIENDO EN KAFKA")
 
     kafkaDF
       .writeStream
@@ -53,34 +51,29 @@ object StreamingApp extends Logging {
           val busqueda = batchDF.select("BUSQUEDA").collect()(0).mkString.replace("\"", "")
             .toLowerCase.split(" ")
 
-          val output = QueryProcessor.process(articlesDataFrame, busqueda)
-
+          val output = allArticlesDataFrame.getFoundArticlesDf(busqueda)
 
           val dummyData = Seq("No se ha encontrado ningun artículo con esas palabras clave")
           val noSuchArticleMessage = ssc.sparkContext.parallelize(dummyData).toDF("value")
 
+          output.show(10)
+
           output.count() match {
             case 0 =>
-              println("No se ha encontrado ningun articulo")
-              noSuchArticleMessage
-                .write
-                .format("kafka")
-                .option("kafka.bootstrap.servers", bootstrapServer)
-                .option("topic", "output")
-                .save
-            //              ()
+              log.warn("No se ha encontrado ningun articulo.")
+
+              writeKafkaStream(noSuchArticleMessage, cfg)
             case _ =>
-              println(s"Se han encontrado ${output.count()} articulos que podrian interesarte:")
-              output
-                .write
-                .format("kafka")
-                .option("kafka.bootstrap.servers", bootstrapServer)
-                .option("topic", "output")
-                .save
+
+              log.info(s"Se han encontrado ${output.count()} articulos que podrian interesarte:")
+              writeKafkaStream(output, cfg)
           }
-          println("saved results")
         }
       }
-      .start().awaitTermination()
+      .start()
+      .awaitTermination()
+//    inputConsole.awaitTermination()
+
   }
+
 }

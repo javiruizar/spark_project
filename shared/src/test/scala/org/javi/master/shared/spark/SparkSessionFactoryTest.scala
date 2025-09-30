@@ -18,7 +18,7 @@ class SparkSessionFactoryTest extends AnyFlatSpec with Matchers with BeforeAndAf
       |spark.default.parallelism = "1"
       """.stripMargin)
 
-  private lazy val spark: SparkSession = SparkSessionFactory.build("test-session", testConfig)
+  private lazy val spark: SparkSession = SparkSessionFactory.build(testConfig, "test-session")
   
 //  override def afterAll(): Unit = {
 //    if (spark != null) {

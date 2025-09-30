@@ -1,6 +1,6 @@
 package org.javi.master.shared.spark
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import org.apache.spark.sql.SparkSession
 import scala.collection.JavaConverters._
 
@@ -14,16 +14,21 @@ object SparkSessionFactory {
     * Construye una `SparkSession`.
     *
     * @param appName  Nombre de la aplicación Spark.
-    * @param config   Configuración opcional (Typesafe Config). Si no se pasa se cargará `application.conf`.
+    * @param conf   Configuración opcional (Typesafe Config). Si no se pasa se cargará `application.conf`.
     */
-  def build(appName: String, conf: Config): SparkSession = {
+  def build(conf: Config, appName: String="Spark-App"): SparkSession = {
 
-    val builder      = SparkSession.builder().appName(appName)
+    val builder = SparkSession.builder().appName(appName)
 
-    // Aplica todas las key/values del fichero de configuración
     conf.entrySet().asScala.foreach { entry =>
       builder.config(entry.getKey, conf.getString(entry.getKey))
     }
     builder.getOrCreate()
   }
+
+//  def getConfigFromFile(config:Config): Config = {
+//   config.getConfig("spark-conf").entrySet().asScala
+//  .map(entry => (entry.getKey, entry.getValue.unwrapped().toString))
+//  .toMap
+//  }
 }

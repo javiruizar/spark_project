@@ -1,4 +1,4 @@
-package org.javi.master.shared.utils.io
+package org.javi.master.shared.utils.json
 
 import com.typesafe.config.Config
 import org.apache.spark.sql.{DataFrame, SparkSession}
