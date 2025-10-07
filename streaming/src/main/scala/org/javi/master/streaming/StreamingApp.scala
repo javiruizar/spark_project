@@ -1,17 +1,16 @@
 package org.javi.master.streaming
 
 
-import com.typesafe.config.{Config, ConfigRenderOptions}
-import org.apache.spark.SparkFiles
+import com.typesafe.config.Config
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
-import org.apache.spark.sql.functions.{array_intersect, col, concat, concat_ws, lit, max, size, when}
-import org.apache.spark.sql.types.{StringType, StructType}
 import org.javi.master.shared.config.ReadConfig
-import org.javi.master.shared.spark.SparkSessionFactory
-import org.javi.master.shared.utils.mongo.MongoUtils.readMongo
+import org.javi.master.shared.spark.SparkSessionFactory._
+import org.javi.master.shared.utils.mongo.MongoUtils.{getMongoConfig, readMongo}
 import org.javi.master.shared.ops.DataFrameOps._
-import org.javi.master.shared.utils.kafka.KafkaUtils.{readKafkaStream, writeKafkaStream}
+import org.javi.master.shared.utils.kafka.KafkaUtils.{getKafkaConfig, readKafkaStream, writeKafkaStream}
+import org.javi.master.shared.utils.kafka.KafkaConfig
+import org.javi.master.shared.utils.mongo.MongoConfig
 
 import java.io.File
 //import org.javi.master.streaming.processing.QueryProcessor
@@ -21,12 +20,14 @@ object StreamingApp extends Logging {
   def main(args: Array[String]): Unit = {
 
     val confPath = System.getProperty("config.file")
-    val cfg: Config = ReadConfig.load(confPath)
-    val ssc: SparkSession = SparkSessionFactory.build(cfg)
+    val config: Config = ReadConfig.load(confPath)
+    val stramingBuilder = getAllConfigforSpark(config)
+    val ssc: SparkSession = buildSparkSession(stramingBuilder)
 
     import ssc.implicits._
 
-    val mongoData = readMongo(ssc, cfg)
+    val mongoConfig: MongoConfig = getMongoConfig(config)
+    val mongoData = readMongo(ssc, mongoConfig)
 
     val sellingFeatures = mongoData.getFieldsOfNestedColumn("caracteristicas_venta")
 
@@ -34,7 +35,8 @@ object StreamingApp extends Logging {
 
     log.info("LEYENDO DE KAFKA")
 
-    val kafkaDF = readKafkaStream(ssc, cfg)
+    val kafkaConfig: KafkaConfig = getKafkaConfig(config)
+    val kafkaDF = readKafkaStream(ssc, kafkaConfig)
       .selectExpr("CAST(value AS STRING) as BUSQUEDA")
 
 //    val inputConsole = kafkaDF.writeStream.format("console")
@@ -62,11 +64,11 @@ object StreamingApp extends Logging {
             case 0 =>
               log.warn("No se ha encontrado ningun articulo.")
 
-              writeKafkaStream(noSuchArticleMessage, cfg)
+              writeKafkaStream(noSuchArticleMessage, kafkaConfig)
             case _ =>
 
               log.info(s"Se han encontrado ${output.count()} articulos que podrian interesarte:")
-              writeKafkaStream(output, cfg)
+              writeKafkaStream(output, kafkaConfig)
           }
         }
       }

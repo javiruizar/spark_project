@@ -35,6 +35,7 @@ object ReadConfig extends Logging {
         log.error(s"Error en la lectura del conf $confPath}. ${e.getMessage}")
         throw e
     }
-
   }
+  def getOptionableConfig(conf: Config, path: String): Option[String] =
+    if (conf.hasPath(path)) Some(conf.getString(path)) else None
 }

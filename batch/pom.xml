@@ -28,8 +28,6 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.short.version}</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.mongodb.spark/mongo-spark-connector -->
-        <!-- https://mvnrepository.com/artifact/org.mongodb.spark/mongo-spark-connector -->
         <dependency>
             <groupId>org.mongodb.spark</groupId>
             <artifactId>mongo-spark-connector_${scala.short.version}</artifactId>
@@ -37,6 +35,10 @@
         <dependency>
         <groupId>org.scalatest</groupId>
         <artifactId>scalatest_${scala.short.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb.scala</groupId>
+            <artifactId>mongo-scala-driver_${scala.short.version}</artifactId>
         </dependency>
 
     </dependencies>

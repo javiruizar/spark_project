@@ -16,8 +16,6 @@ echo $JAR_PATH
 CONFIG_FILE="$(dirname "$BASH_SOURCE[0]")/conf/$ENVIRONMENT/streaming.conf"
 # Configuración por defecto
 #CONFIG_FILE="${CONFIG_FILE:-$(dirname "$BASH_SOURCE[0]")/conf/$ENVIRONMENT/streaming.conf}"
-echo "LISTANDO"
-ls "$CONFIG_FILE"
 LOG2J_FILE="${LOG2J_FILE:-$(dirname  "$BASH_SOURCE[0]")/conf/$ENVIRONMENT/log4j2.properties}"
 echo $LOG2J_FILE
 # Ejecutar spark-submit

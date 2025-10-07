@@ -29,6 +29,8 @@ Desde la shell de mongoDb crear db, coleccion y añadir algunos documentos a Mon
     db.articulos
     db.articulos.insert(variosArticulos)
 
+Para borrar los datos de la coleccion de mongo:
+    db.articulos.deleteMany({})
 ## En una terminal desde la raiz del proyecto
 `mvn clean package`
 
