@@ -12,7 +12,6 @@ case $ENVIRONMENT in
     ;;
 esac
 
-echo $JAR_PATH
 # Configuración por defecto
 CONFIG_FILE="$(dirname  "$BASH_SOURCE[0]")/conf/$ENVIRONMENT/batch.conf"
 #CONFIG_FILE="${CONFIG_FILE:-$(dirname  "$BASH_SOURCE[0]")/../conf/$ENVIRONMENT/batch.conf}" # ${VAR:-DEFAULT} si existe VAR usala, si no usa DEFAULT
@@ -27,7 +26,7 @@ echo $SPARK_MASTER
 spark-submit \
   --class org.javi.master.batch.BatchApp \
   --master "$SPARK_MASTER" \
+  --files "$CONFIG_FILE,$LOG2J_FILE" \
   --conf "spark.driver.extraJavaOptions=-Dconfig.file=$CONFIG_FILE -Dlog4j.configurationFile=$(dirname "$0")/../conf/log4j2.properties" \
-  --conf "spark.executor.extraJavaOptions=-Dlog4j.configurationFile=log4j2.properties" \
-  --files "$CONFIG_FILE","$LOG2J_FILE" \
+  --conf "spark.executor.extraJavaOptions=-Dlog4j.configurationFile=./conf/dev/log4j2.properties -Dlog4j.debug=true"\
   "$JAR_PATH" "$@"

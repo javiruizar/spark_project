@@ -71,7 +71,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatestplus</groupId>
-            <artifactId>mockito-4-11_3</artifactId>
+            <artifactId>mockito-4-11_${scala.short.version}</artifactId>
         </dependency>
 
     </dependencies>

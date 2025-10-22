@@ -8,17 +8,17 @@ import org.javi.master.shared.config.ReadConfig.getOptionableConfig
 object MongoUtils extends Logging {
 
   /**
-    * Escribe el `DataFrame` en MongoDB usando los parámetros de `BatchConfig`.
-    */
+   * Escribe el `DataFrame` en MongoDB usando los parámetros de `BatchConfig`.
+   */
   def writeMongo(df: DataFrame, mongoConfig: MongoConfig): Unit = {
     log.info("Escribiendo datos en MongoDB...")
 
-    val mongoUri= mongoConfig.outputUri.get
+    val mongoUri = mongoConfig.outputUri.get
     val mongoDatabase = mongoConfig.outputDb.get
     val mongoCollection = mongoConfig.outputCollection.get
     try {
 
-      df.write.format("mongodb").mode(SaveMode.Overwrite).option("c", "")
+//      df.write.format("mongodb").mode(SaveMode.Overwrite).option("c", "")
       df.write
         .format("mongodb")
         .mode("append")
@@ -35,17 +35,16 @@ object MongoUtils extends Logging {
     }
   }
 
-  def readMongo (spark: SparkSession,  mongoConfig: MongoConfig): DataFrame = {
+  def readMongo(spark: SparkSession, mongoConfig: MongoConfig): DataFrame = {
     log.info("Leyendo datos de MongoDB...")
-    val mongoUri = mongoConfig.inputUri.get
-    val mongoDatabase= mongoConfig.inputDb.get
+    val mongoUri = mongoConfig.outputUri.get
+    val mongoDatabase = mongoConfig.inputDb.get
     val mongoCollection = mongoConfig.inputCollection.get
-//    val mongoDatabase= cfg.getString("spark.mongodb.input.database")
-//    val mongoCollection = cfg.getString("spark.mongodb.input.collection")
 
     try {
       spark.read
         .format("mongodb")
+        .option("connection.uri", mongoUri)
         .option("database", mongoDatabase)
         .option("collection", mongoCollection)
         .load()
@@ -62,11 +61,11 @@ object MongoUtils extends Logging {
     val mongoConf = conf.getConfig("mongodb")
     MongoConfig(
       inputUri = getOptionableConfig(mongoConf, "input.uri"),
-        outputUri = getOptionableConfig(mongoConf, "output.uri"),
-        inputDb = getOptionableConfig(mongoConf, "input.database"),
-        outputDb = getOptionableConfig(mongoConf, "output.database"),
-        inputCollection = getOptionableConfig(mongoConf, "input.collection"),
-        outputCollection = getOptionableConfig(mongoConf, "output.collection"),
+      outputUri = getOptionableConfig(mongoConf, "output.uri"),
+      inputDb = getOptionableConfig(mongoConf, "input.database"),
+      outputDb = getOptionableConfig(mongoConf, "output.database"),
+      inputCollection = getOptionableConfig(mongoConf, "input.collection"),
+      outputCollection = getOptionableConfig(mongoConf, "output.collection"),
 
     )
   }

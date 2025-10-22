@@ -37,7 +37,7 @@
         <scala.short.version>2.12</scala.short.version>
         <spark.version>3.5.1</spark.version>
         <kafka.version>3.9.1</kafka.version>
-        <scalatest.version>3.2.17</scalatest.version>
+        <scalatest.version>3.2.18</scalatest.version>
         <spark.testing.base.version>3.4.0_0.15.0</spark.testing.base.version>
         <log4j2.version>2.20.0</log4j2.version>
     </properties>
@@ -106,7 +106,7 @@
             <!-- https://mvnrepository.com/artifact/org.scalatestplus/mockito-4-11 -->
             <dependency>
                 <groupId>org.scalatestplus</groupId>
-                <artifactId>mockito-4-11_3</artifactId>
+                <artifactId>mockito-4-11_${scala.short.version}</artifactId>
                 <version>3.2.18.0</version>
                 <scope>test</scope>
             </dependency>
@@ -146,6 +146,7 @@
                 <version>2.15.2</version>
             </dependency>
         </dependencies>
+
     </dependencyManagement>
 
     <build>
@@ -156,7 +157,8 @@
                 <version>3.1.2</version>
 
                 <configuration>
-                    <skipTests>false</skipTests>
+                    <useSystemClassLoader>false</useSystemClassLoader>
+<!--                    <skipTests>false</skipTests>-->
                     <includes>
                         <include>**/*Test.*</include>
                         <include>**/*Spec.*</include>
@@ -164,7 +166,7 @@
                     </includes>
                     <systemPropertyVariables>
                         <java.awt.headless>true</java.awt.headless>
-                        <de.flapdoodle.os.override>Linux|X86_64|CentOS|CentOS_9</de.flapdoodle.os.override>
+<!--                        <de.flapdoodle.os.override>Linux|X86_64|CentOS|CentOS_9</de.flapdoodle.os.override>-->
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

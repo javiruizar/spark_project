@@ -12,39 +12,34 @@ import org.javi.master.shared.utils.kafka.KafkaUtils.{getKafkaConfig, readKafkaS
 import org.javi.master.shared.utils.kafka.KafkaConfig
 import org.javi.master.shared.utils.mongo.MongoConfig
 
-import java.io.File
-//import org.javi.master.streaming.processing.QueryProcessor
-
 object StreamingApp extends Logging {
 
   def main(args: Array[String]): Unit = {
 
     val confPath = System.getProperty("config.file")
     val config: Config = ReadConfig.load(confPath)
-    val stramingBuilder = getAllConfigforSpark(config)
-    val ssc: SparkSession = buildSparkSession(stramingBuilder)
-
-    import ssc.implicits._
-
     val mongoConfig: MongoConfig = getMongoConfig(config)
-    val mongoData = readMongo(ssc, mongoConfig)
+    val kafkaConfig: KafkaConfig = getKafkaConfig(config)
+
+    val streamingBuilder = getAllConfigforSpark(config)
+    val spark: SparkSession = buildSparkSession(streamingBuilder)
+
+    import spark.implicits._
+
+
+    val mongoData = readMongo(spark, mongoConfig)
 
     val sellingFeatures = mongoData.getFieldsOfNestedColumn("caracteristicas_venta")
 
     val allArticlesDataFrame = mongoData.getAllArticlesWithFeaturesDf(sellingFeatures)
 
-    log.info("LEYENDO DE KAFKA")
-
-    val kafkaConfig: KafkaConfig = getKafkaConfig(config)
-    val kafkaDF = readKafkaStream(ssc, kafkaConfig)
+    val kafkaDF = readKafkaStream(spark, kafkaConfig)
       .selectExpr("CAST(value AS STRING) as BUSQUEDA")
 
 //    val inputConsole = kafkaDF.writeStream.format("console")
 //      .option("truncate", false)
 //      .outputMode("append")
 //      .start()
-
-    log.info("ESCRIBIENDO EN KAFKA")
 
     kafkaDF
       .writeStream
@@ -56,7 +51,7 @@ object StreamingApp extends Logging {
           val output = allArticlesDataFrame.getFoundArticlesDf(busqueda)
 
           val dummyData = Seq("No se ha encontrado ningun artículo con esas palabras clave")
-          val noSuchArticleMessage = ssc.sparkContext.parallelize(dummyData).toDF("value")
+          val noSuchArticleMessage = spark.sparkContext.parallelize(dummyData).toDF("value")
 
           output.show(10)
 

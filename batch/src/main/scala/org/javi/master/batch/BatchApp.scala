@@ -17,14 +17,15 @@ import org.javi.master.shared.utils.mongo.{MongoConfig, MongoUtils}
 object BatchApp extends Logging {
 
   def main(args: Array[String]): Unit = {
+    log.info("STARTING PROCESS")
     val confPath = System.getProperty("config.file")
     val config: Config = ReadConfig.load(confPath)
-    val renderOptions = ConfigRenderOptions.defaults()
-      .setOriginComments(false) // No mostrar comentarios sobre el origen de cada valor
-      .setComments(false)       // No mostrar comentarios del fichero
-      .setJson(true)            // Usar formato JSON
-      .setFormatted(true)
-    println(config.root().render(renderOptions))
+//    val renderOptions = ConfigRenderOptions.defaults()
+//      .setOriginComments(false) // No mostrar comentarios sobre el origen de cada valor
+//      .setComments(false)       // No mostrar comentarios del fichero
+//      .setJson(true)            // Usar formato JSON
+//      .setFormatted(true)
+//    println(config.root().render(renderOptions))
     val batchBuilder: SparkSession.Builder = getAllConfigforSpark(config)
     val spark: SparkSession = buildSparkSession(batchBuilder, "ElMercado-BatchApplication")
 

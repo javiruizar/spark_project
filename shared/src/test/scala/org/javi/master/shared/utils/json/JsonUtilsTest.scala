@@ -38,12 +38,10 @@ class JsonUtilsTest extends AnyFlatSpec with Matchers with BeforeAndAfterAll {
   "JsonUtils.read" should "read JSON file with relative path in local mode" in {
     // Crear un archivo JSON temporal para la prueba
 
-    try {
       val df = JsonUtils.readJson(spark, "shared/src/test/resources/json/batch.json")
 
       df.count() shouldBe 2
       df.columns should contain allOf("id", "name")
-    }
   }
 
   "JsonUtils.read" should "throw an exception for non-existent file" in {

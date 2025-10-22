@@ -30,9 +30,16 @@ object SparkSessionFactory {
 
     val builder = SparkSession.builder()
     if (conf.hasPath("spark")) {
-        conf.getConfig("spark").entrySet().asScala.foreach { entry =>
-          builder.config(entry.getKey, conf.getString(entry.getKey))
-        }
+      val sparkConf = conf.getConfig("spark")
+      sparkConf.entrySet().asScala.foreach { entry =>
+        val fullKey = "spark." + entry.getKey
+        val value = entry.getValue.unwrapped().toString
+
+        builder.config(fullKey, value)
+      }
+    }
+    else {
+      builder.config("spark.master","local[*]")
     }
     builder
   }
