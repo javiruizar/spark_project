@@ -39,6 +39,10 @@
             <artifactId>scalatest_${scala.short.version}</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql-kafka-0-10_${scala.short.version}</artifactId>
+        </dependency>
+        <dependency>
             <groupId>de.flapdoodle.embed</groupId>
             <artifactId>de.flapdoodle.embed.mongo</artifactId>
         </dependency>
@@ -49,6 +53,11 @@
         <dependency>
             <groupId>org.scalatestplus</groupId>
             <artifactId>mockito-4-11_${scala.short.version}</artifactId>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/io.github.embeddedkafka/embedded-kafka -->
+        <dependency>
+            <groupId>io.github.embeddedkafka</groupId>
+            <artifactId>embedded-kafka_2.12</artifactId>
         </dependency>
     </dependencies>
     <build>

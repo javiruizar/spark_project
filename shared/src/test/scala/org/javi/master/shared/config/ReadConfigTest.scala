@@ -82,14 +82,4 @@ class ReadConfigTest extends AnyFlatSpec with Matchers {
     }
     ex.getMessage should include ("dummy fail")
   }
-
-//  it should  "whatever" in {
-//    val confMock = mock(classOf[Config])
-//    when(confMock.hasPath("bad.key")).thenReturn(true)
-//    when(confMock.getString("bad.key")).thenReturn("valor")
-//
-//
-//    val result = ReadConfig.getOptionableConfig(confMock, "bad.key")
-//    result.shouldBe(Some("valor"))
-//  }
-  }
+ }
