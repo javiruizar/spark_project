@@ -59,6 +59,11 @@
             <groupId>io.github.embeddedkafka</groupId>
             <artifactId>embedded-kafka_2.12</artifactId>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.github.mrpowers/spark-fast-tests -->
+        <dependency>
+            <groupId>com.github.mrpowers</groupId>
+            <artifactId>spark-fast-tests_2.12</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -29,9 +29,9 @@ object StreamingApp extends Logging {
 
     val mongoData = readMongo(spark, mongoConfig)
 
-    val sellingFeatures = mongoData.getFieldsOfNestedColumn("caracteristicas_venta")
+    val concatFieldOfSellingFeatures = mongoData.concatenateNestedFieldsWithValues("caracteristicas_venta")
 
-    val allArticlesDataFrame = mongoData.getAllArticlesWithFeaturesDf(sellingFeatures)
+    val allArticlesDataFrame = mongoData.getAllArticlesWithFeaturesDf(concatFieldOfSellingFeatures)
 
     val kafkaDF = readKafkaStream(spark, kafkaConfig)
       .selectExpr("CAST(value AS STRING) as BUSQUEDA")

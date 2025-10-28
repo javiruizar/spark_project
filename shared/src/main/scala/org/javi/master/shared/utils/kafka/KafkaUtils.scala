@@ -34,7 +34,7 @@ object KafkaUtils extends Logging {
     )
     val bootstrapServer = cfg.bootstrapServers
     val topic = cfg.inputTopic.get
-    val startingOffset = cfg.startingOffset.get
+    val startingOffset = cfg.startingOffset.getOrElse("earliest")
     spark.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", bootstrapServer)

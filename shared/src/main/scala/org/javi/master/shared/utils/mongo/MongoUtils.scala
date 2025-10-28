@@ -37,7 +37,7 @@ object MongoUtils extends Logging {
 
   def readMongo(spark: SparkSession, mongoConfig: MongoConfig): DataFrame = {
     log.info("Leyendo datos de MongoDB...")
-    val mongoUri = mongoConfig.outputUri.get
+    val mongoUri = mongoConfig.inputUri.get
     val mongoDatabase = mongoConfig.inputDb.get
     val mongoCollection = mongoConfig.inputCollection.get
 
